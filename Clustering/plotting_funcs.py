@@ -4,20 +4,14 @@ import numpy as np
 from random import randint
 import os
 import matplotlib.pyplot as plt
-
+import config
 
 ## TODO: custon color vector instead of random, add legend with cluster names (labels)
 def plot_clustering(latent, clusters):
 
     clusters = clusters[:latent.shape[0]] # because of weird batch_size
 
-    hex_colors = []
-    color_map = {}
-    for label in np.unique(clusters):
-        hex_colors.append('#%06X' % randint(0, 0xFFFFFF))
-        color_map[label] = hex_colors[-1]
-
-    colors = [hex_colors[int(i)] for i in clusters]
+    colors = [config.color_options[int(i)] for i in clusters]
 
     latent_pca = TruncatedSVD(n_components=2).fit_transform(latent)
     latent_tsne = TSNE(perplexity=80, min_grad_norm=1E-12, n_iter=3000).fit_transform(latent)
@@ -31,8 +25,6 @@ def plot_clustering(latent, clusters):
     axs[1].set_title('tSNE')
 
     fig.show()
-
-    return hex_colors , color_map
 
 def plot_dual_clustering(well1, clusters1, well2, clusters2, hex_colors):
 
@@ -62,3 +54,16 @@ def plot_dual_clustering(well1, clusters1, well2, clusters2, hex_colors):
     axs[1,1].set_title('tSNE on well2')
 
     fig.show()
+
+def plot_trajectory(kinetic):
+    return plt.plot(kinetic[:,0],kinetic[:,1])
+def plot_representatives(rep_groups):
+    l = len(rep_groups[0])
+    L = len(rep_groups)
+    fig, axs = plt.subplots(l,L, figsize=(10,10),sharey=True,sharex=True)
+    fig.tight_layout()
+    for j,reps in enumerate(rep_groups):
+        for i,rep in enumerate(reps):
+            axs[i,j].plot(rep[:,0],rep[:,1])
+    fig.show()
+
