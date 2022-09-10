@@ -35,7 +35,7 @@ def cut_feture_vecs_and_preprocess(tracks,feature_type,ts_len,cut_longer_ts=Fals
     if(cut_longer_ts):
         track_cut = np.array([trk[:ts_len] for trk in tracks if len(trk)>=ts_len])
     else:
-        tracks_cut = np.array([trk for trk in tracks if len(trk)==ts_len])
+        track_cut = np.array([trk for trk in tracks if len(trk)==ts_len])
     if 'centroids' in feature_type:
         track_cut = centroids_zero_center(track_cut)
     return track_cut
@@ -53,7 +53,7 @@ def from_results_folder_PATH_to_arrays(features=['centroids','morphologies','emb
             continue
         for file in all_files:
             file_name = file.split('_')
-            well_name = file_name[2]
+            well_name = file_name[1]
             feature_type = file_name[-1]
             if(not any(fet in feature_type for fet in features)):
                 continue
@@ -80,7 +80,9 @@ def from_results_folder_PATH_to_arrays(features=['centroids','morphologies','emb
 
     results_tracks = np.vstack(all_tracks)
     results_labels = np.concatenate(labels)
+    cell_types = np.array([config.wells_to_genetype_dict[well] for well in results_labels])
     if(save):
         np.save(config.npy_save_path+'/features'+name_ext+'.npy',results_tracks)
         np.save(config.npy_save_path+'/labels'+name_ext+'.npy',results_labels)
+        np.save(config.npy_save_path+'/celltypes'+name_ext+'.npy',cell_types)
     return results_tracks,results_labels
