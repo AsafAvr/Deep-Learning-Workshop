@@ -57,6 +57,7 @@ def plot_dual_clustering(well1, clusters1, well2, clusters2, hex_colors):
 
 def plot_trajectory(kinetic):
     return plt.plot(kinetic[:,0],kinetic[:,1])
+
 def plot_representatives(rep_groups):
     l = len(rep_groups[0])
     L = len(rep_groups)
