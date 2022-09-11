@@ -100,8 +100,6 @@ def temporal_autoencoder(input_dim, timesteps, n_filters=50, kernel_size=10, str
         strides: strides in convolutional layer
         pool_size: pooling size in max pooling layer, must divide time series length
         n_units: numbers of units in the two BiLSTM layers
-        alpha: coefficient in Student's kernel
-        dist_metric: distance metric between latent sequences
 
     # Return
         (ae_model, encoder_model, decoder_model): AE, encoder and decoder models

@@ -1,4 +1,5 @@
 from sklearn.manifold import TSNE
+from sklearn.preprocessing import LabelEncoder
 from sklearn.decomposition import TruncatedSVD
 import numpy as np
 from random import randint
@@ -68,3 +69,37 @@ def plot_representatives(rep_groups):
             axs[i,j].plot(rep[:,0],rep[:,1])
     fig.show()
 
+def plot_autoencoder_by_time(orig_list,pred_list , figsize =(10,15)):
+    rows = len(orig_list)
+    timesteps = orig_list[0].shape[0]
+    features = orig_list[0].shape[1]
+    fig, axs = plt.subplots(rows,features, figsize=figsize,sharey=True,sharex=True)
+    fig.tight_layout()
+    for j in range(features):
+      for i,_ in enumerate(orig_list):
+          data = np.zeros((timesteps,2))
+          data[:,0] = pred_list[i][:,j]
+          data[:,1] = orig_list[i][:,j]
+          idx = [i for i in range(len(data))]
+          axs[i,j].plot(idx,data)
+    fig.show()
+
+wells_to_genetype_dict = {
+  **dict.fromkeys(['D2','D3','D4','G5','G6','G7'], "control"),
+  **dict.fromkeys(['D5','D6','D7'], "Grb2"),
+  **dict.fromkeys(['F2','F3','F4'], "Gab1"),
+  **dict.fromkeys(['G2','G3','G4'], "MET+Gab1"),
+  **dict.fromkeys(['E5','E6',"E7"], "MET+Grb2")
+}
+
+def plot_clusters_treatment(latent,y):
+    y2treat = pd.Series(y).map(wells_to_genetype_dict)
+    le = LabelEncoder()
+    le.fit(list(wells_to_genetype_dict.values()))
+    treat2lbl = le.transform(y2treat.values)
+
+    color_options = ['red','blue','purple','brown','green', 'pink', 'black']
+    colors = [color_options[i] for i in treat2lbl]
+    plt.subplots(figsize = (10,10))
+    plt.scatter(latent_embedded[:, 0], latent_embedded[:, 1], c = colors , marker='*', linewidths=0)
+    fig.show()
