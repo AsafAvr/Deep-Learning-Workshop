@@ -84,22 +84,3 @@ def plot_autoencoder_by_time(orig_list,pred_list , figsize =(10,15)):
           axs[i,j].plot(idx,data)
     fig.show()
 
-wells_to_genetype_dict = {
-  **dict.fromkeys(['D2','D3','D4','G5','G6','G7'], "control"),
-  **dict.fromkeys(['D5','D6','D7'], "Grb2"),
-  **dict.fromkeys(['F2','F3','F4'], "Gab1"),
-  **dict.fromkeys(['G2','G3','G4'], "MET+Gab1"),
-  **dict.fromkeys(['E5','E6',"E7"], "MET+Grb2")
-}
-
-def plot_clusters_treatment(latent,y):
-    y2treat = pd.Series(y).map(wells_to_genetype_dict)
-    le = LabelEncoder()
-    le.fit(list(wells_to_genetype_dict.values()))
-    treat2lbl = le.transform(y2treat.values)
-
-    color_options = ['red','blue','purple','brown','green', 'pink', 'black']
-    colors = [color_options[i] for i in treat2lbl]
-    plt.subplots(figsize = (10,10))
-    plt.scatter(latent_embedded[:, 0], latent_embedded[:, 1], c = colors , marker='*', linewidths=0)
-    fig.show()

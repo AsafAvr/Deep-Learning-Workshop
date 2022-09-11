@@ -1,3 +1,4 @@
+from pydoc import stripid
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -7,6 +8,22 @@ import sys
 from keras import losses
 from keras import regularizers
 import keras.backend as K
+
+from keras.layers import Conv2D, Conv2DTranspose, Dense, Flatten, Reshape,LSTM,RepeatVector,Dense,TimeDistributed, \
+Conv1D,LeakyReLU,MaxPool1D,Bidirectional,UpSampling2D,Input
+from keras.models import Model,Sequential
+from keras.utils.vis_utils import plot_model
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.model_selection import train_test_split
+from tensorflow.keras import layers, losses
+from tensorflow.keras.datasets import fashion_mnist
+from tensorflow.keras.models import Model
 
 #tf.keras.losses.CosineSimilarity(axis=-1, reduction="auto", name="cosine_similarity")
 #tf.keras.losses.Huber(delta=1.0, reduction="auto", name="huber_loss")
@@ -19,21 +36,39 @@ import keras.backend as K
 # def custom_loss(y_true, y_pred):
 #     return K.mean(y_true - y_pred)**2
 
+
+def ae_conv(input_shape=(4, 4, 4), filters=[32, 64, 8]):
+    stride = 2
+    ker = 2
+    conv_depth = len(filters)-1
+    mul = stride**conv_depth
+    model = Sequential()
+    ## padding????
+    if input_shape[0] % 4 == 0:
+        pad3 = 'same'
+    else:
+        pad3 = 'valid'
+    model.add(Conv2D(filters[0], ker, strides=stride, padding='same', activation='relu', name='conv1', input_shape=input_shape))
+
+    model.add(Conv2D(filters[1], ker, strides=1, padding='same', activation='relu', name='conv2'))
+
+    model.add(Flatten())
+    model.add(Dense(units=filters[-1], name='embedding'))
+    model.add(Dense(units=filters[-2]*input_shape[0]*input_shape[1]/(mul*mul), activation='relu'))
+
+    model.add(Reshape((int(input_shape[0]/mul), int(input_shape[1]/mul), int(filters[2]))))
+
+    model.add(Conv2DTranspose(filters[0], ker, strides=1, padding='same', activation='relu', name='deconv2'))
+
+    model.add(Conv2DTranspose(input_shape[2], ker, strides=stride, padding='same', name='deconv1'))
+    model.summary()
+    return model
+
+## example of loss
 class MeanSquaredError(losses.Loss):
 
   def call(self, y_true, y_pred):
     return tf.reduce_mean(tf.math.square(y_pred - y_true), axis=-1)
-
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import tensorflow as tf
-
-from sklearn.metrics import accuracy_score, precision_score, recall_score
-from sklearn.model_selection import train_test_split
-from tensorflow.keras import layers, losses
-from tensorflow.keras.datasets import fashion_mnist
-from tensorflow.keras.models import Model
 
 
 class Autoencoder(Model):
@@ -57,16 +92,6 @@ class Autoencoder(Model):
     decoded = self.decoder(encoded)
     return decoded
 
-autoencoder = Autoencoder(latent_dim)
-
-autoencoder.compile(optimizer='adam', loss=losses.MeanSquaredError())
-
-autoencoder.fit(x_train, x_train,
-                epochs=10,
-                shuffle=True,
-                validation_data=(x_test, x_test))
-
-
 class Denoise(Model):
   def __init__(self):
     super(Denoise, self).__init__()
@@ -84,9 +109,6 @@ class Denoise(Model):
     encoded = self.encoder(x)
     decoded = self.decoder(encoded)
     return decoded
-
-autoencoder = Denoise()
-
 
 def temporal_autoencoder(input_dim, timesteps, n_filters=50, kernel_size=10, strides=1, pool_size=10, n_units=[50, 1]):
     """
@@ -113,9 +135,9 @@ def temporal_autoencoder(input_dim, timesteps, n_filters=50, kernel_size=10, str
     encoded = Conv1D(n_filters, kernel_size, strides=strides, padding='same', activation='linear')(x)
     encoded = LeakyReLU()(encoded)
     encoded = MaxPool1D(pool_size)(encoded)
-    encoded = Bidirectional(CuDNNLSTM(n_units[0], return_sequences=True), merge_mode='sum')(encoded)
+    encoded = Bidirectional(LSTM(n_units[0], return_sequences=True), merge_mode='sum')(encoded)
     encoded = LeakyReLU()(encoded)
-    encoded = Bidirectional(CuDNNLSTM(n_units[1], return_sequences=True), merge_mode='sum')(encoded)
+    encoded = Bidirectional(LSTM(n_units[1], return_sequences=True), merge_mode='sum')(encoded)
     encoded = LeakyReLU(name='latent')(encoded)
 
     # Decoder
