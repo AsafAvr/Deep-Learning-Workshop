@@ -1,4 +1,5 @@
 from sklearn.manifold import TSNE
+from sklearn.preprocessing import LabelEncoder
 from sklearn.decomposition import TruncatedSVD
 import numpy as np
 from random import randint
