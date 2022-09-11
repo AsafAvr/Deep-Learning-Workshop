@@ -36,11 +36,10 @@ from tensorflow.keras.models import Model
 # def custom_loss(y_true, y_pred):
 #     return K.mean(y_true - y_pred)**2
 
-
 def ae_conv(input_shape=(4, 4, 4), filters=[32, 64, 8]):
     stride = 2
     ker = 2
-    conv_depth = len(filters)-1
+    conv_depth = len(filters)-2
     mul = stride**conv_depth
     model = Sequential()
     ## padding????
@@ -54,7 +53,7 @@ def ae_conv(input_shape=(4, 4, 4), filters=[32, 64, 8]):
 
     model.add(Flatten())
     model.add(Dense(units=filters[-1], name='embedding'))
-    model.add(Dense(units=filters[-2]*input_shape[0]*input_shape[1]/(mul*mul), activation='relu'))
+    model.add(Dense(units=64, activation='relu'))
 
     model.add(Reshape((int(input_shape[0]/mul), int(input_shape[1]/mul), int(filters[2]))))
 
@@ -63,6 +62,7 @@ def ae_conv(input_shape=(4, 4, 4), filters=[32, 64, 8]):
     model.add(Conv2DTranspose(input_shape[2], ker, strides=stride, padding='same', name='deconv1'))
     model.summary()
     return model
+
 
 ## example of loss
 class MeanSquaredError(losses.Loss):
@@ -122,8 +122,6 @@ def temporal_autoencoder(input_dim, timesteps, n_filters=50, kernel_size=10, str
         strides: strides in convolutional layer
         pool_size: pooling size in max pooling layer, must divide time series length
         n_units: numbers of units in the two BiLSTM layers
-        alpha: coefficient in Student's kernel
-        dist_metric: distance metric between latent sequences
 
     # Return
         (ae_model, encoder_model, decoder_model): AE, encoder and decoder models
