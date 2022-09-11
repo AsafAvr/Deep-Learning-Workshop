@@ -1,3 +1,4 @@
+from pydoc import stripid
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -7,6 +8,16 @@ import sys
 from keras import losses
 from keras import regularizers
 import keras.backend as K
+
+from keras.layers import Conv2D, Conv2DTranspose, Dense, Flatten, Reshape
+from keras.models import Model
+from keras.models import Sequential
+from keras.layers import LSTM
+from keras.layers import Dense
+from keras.layers import RepeatVector
+from keras.layers import TimeDistributed
+from keras.utils.vis_utils import plot_model
+import numpy as np
 
 #tf.keras.losses.CosineSimilarity(axis=-1, reduction="auto", name="cosine_similarity")
 #tf.keras.losses.Huber(delta=1.0, reduction="auto", name="huber_loss")
@@ -18,6 +29,34 @@ import keras.backend as K
 
 # def custom_loss(y_true, y_pred):
 #     return K.mean(y_true - y_pred)**2
+
+
+def ae_conv(input_shape=(4, 4, 4), filters=[32, 64, 8]):
+    stride = 2
+    ker = 2
+    conv_depth = len(filters)-1
+    mul = stride**conv_depth
+    model = Sequential()
+    ## padding????
+    if input_shape[0] % 4 == 0:
+        pad3 = 'same'
+    else:
+        pad3 = 'valid'
+    model.add(Conv2D(filters[0], ker, strides=stride, padding='same', activation='relu', name='conv1', input_shape=input_shape))
+
+    model.add(Conv2D(filters[1], ker, strides=1, padding='same', activation='relu', name='conv2'))
+
+    model.add(Flatten())
+    model.add(Dense(units=filters[-1], name='embedding'))
+    model.add(Dense(units=filters[-2]*input_shape[0]*input_shape[1]/(mul*mul), activation='relu'))
+
+    model.add(Reshape((int(input_shape[0]/mul), int(input_shape[1]/mul), int(filters[2]))))
+
+    model.add(Conv2DTranspose(filters[0], ker, strides=1, padding='same', activation='relu', name='deconv2'))
+
+    model.add(Conv2DTranspose(input_shape[2], ker, strides=stride, padding='same', name='deconv1'))
+    model.summary()
+    return model
 
 class MeanSquaredError(losses.Loss):
 
@@ -57,16 +96,6 @@ class Autoencoder(Model):
     decoded = self.decoder(encoded)
     return decoded
 
-autoencoder = Autoencoder(latent_dim)
-
-autoencoder.compile(optimizer='adam', loss=losses.MeanSquaredError())
-
-autoencoder.fit(x_train, x_train,
-                epochs=10,
-                shuffle=True,
-                validation_data=(x_test, x_test))
-
-
 class Denoise(Model):
   def __init__(self):
     super(Denoise, self).__init__()
@@ -84,5 +113,3 @@ class Denoise(Model):
     encoded = self.encoder(x)
     decoded = self.decoder(encoded)
     return decoded
-
-autoencoder = Denoise()
