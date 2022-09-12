@@ -49,7 +49,7 @@ def temporal_classifier(input_dim, num_labels, timesteps, n_filters=[64,64,64], 
   encoded = Bidirectional(LSTM(n_units[0], return_sequences=True), merge_mode='sum')(encoded)
   encoded = LeakyReLU()(encoded)
   encoded = Bidirectional(LSTM(n_units[1], return_sequences=True), merge_mode='sum')(encoded)
-  encoded = Conv1D(name='latent')(encoded)
+  #encoded = Conv1D(name='latent')(encoded)
   encoded = Flatten(name='latent')(encoded)
   output = Dense(num_labels,activation='softmax',name='classes')(encoded)
 
