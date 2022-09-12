@@ -33,33 +33,6 @@ from keras import layers, losses
 #   def call(self, y_true, y_pred):
 #     return tf.reduce_mean(tf.math.square(y_pred - y_true), axis=-1)
 
-def ae_conv(input_shape=(4, 4, 4), filters=[32, 64, 8]):
-    stride = 2
-    ker = 2
-    conv_depth = len(filters)-2
-    mul = stride**conv_depth
-    model = Sequential()
-    ## padding????
-    if input_shape[0] % 4 == 0:
-        pad3 = 'same'
-    else:
-        pad3 = 'valid'
-    model.add(Conv2D(filters[0], ker, strides=stride, padding='same', activation='relu', name='conv1', input_shape=input_shape))
-
-    model.add(Conv2D(filters[1], ker, strides=1, padding='same', activation='relu', name='conv2'))
-
-    model.add(Flatten())
-    model.add(Dense(units=filters[-1], name='embedding'))
-    model.add(Dense(units=64, activation='relu'))
-
-    model.add(Reshape((int(input_shape[0]/mul), int(input_shape[1]/mul), int(filters[2]))))
-
-    model.add(Conv2DTranspose(filters[0], ker, strides=1, padding='same', activation='relu', name='deconv2'))
-
-    model.add(Conv2DTranspose(input_shape[2], ker, strides=stride, padding='same', name='deconv1'))
-    model.summary()
-    return model
-
 def temporal_classifier(input_dim, num_labels, timesteps, n_filters=[64,64,64], kernel_size=10, strides=1, pool_size=10, n_units=[50, 1]):
   assert(timesteps % pool_size == 0)
 
@@ -76,6 +49,7 @@ def temporal_classifier(input_dim, num_labels, timesteps, n_filters=[64,64,64], 
   encoded = Bidirectional(LSTM(n_units[0], return_sequences=True), merge_mode='sum')(encoded)
   encoded = LeakyReLU()(encoded)
   encoded = Bidirectional(LSTM(n_units[1], return_sequences=True), merge_mode='sum')(encoded)
+  encoded = Conv1D(name='latent')(encoded)
   encoded = Flatten(name='latent')(encoded)
   output = Dense(num_labels,activation='softmax',name='classes')(encoded)
 
@@ -150,3 +124,29 @@ class Autoencoder(Model):
     decoded = self.decoder(encoded)
     return decoded
 
+def ae_conv(input_shape=(4, 4, 4), filters=[32, 64, 8]):
+    stride = 2
+    ker = 2
+    conv_depth = len(filters)-2
+    mul = stride**conv_depth
+    model = Sequential()
+    ## padding????
+    if input_shape[0] % 4 == 0:
+        pad3 = 'same'
+    else:
+        pad3 = 'valid'
+    model.add(Conv2D(filters[0], ker, strides=stride, padding='same', activation='relu', name='conv1', input_shape=input_shape))
+
+    model.add(Conv2D(filters[1], ker, strides=1, padding='same', activation='relu', name='conv2'))
+
+    model.add(Flatten())
+    model.add(Dense(units=filters[-1], name='embedding'))
+    model.add(Dense(units=64, activation='relu'))
+
+    model.add(Reshape((int(input_shape[0]/mul), int(input_shape[1]/mul), int(filters[2]))))
+
+    model.add(Conv2DTranspose(filters[0], ker, strides=1, padding='same', activation='relu', name='deconv2'))
+
+    model.add(Conv2DTranspose(input_shape[2], ker, strides=stride, padding='same', name='deconv1'))
+    model.summary()
+    return model
