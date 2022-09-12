@@ -80,6 +80,20 @@ def plot_representatives_treatment_le(rep_groups, le):
         for i,rep in enumerate(reps):
             axs[i,j].plot(rep[:,0],rep[:,1])
     fig.show()
+    
+def plot_representatives_by_label(XY,labels,plot_label,max_count=5,figsize=(10,10)):
+    uniq_labs = np.unique(labels)
+    fig, axs = plt.subplots(max_count,len(uniq_labs), figsize=figsize,sharey=True,sharex=True)
+    for j,label in enumerate(uniq_labs):
+        axs[0,j].set_title(label)
+        vec = XY[np.where(np.isin(labels,[label]))]
+        rep_group = vec[np.random.choice(vec.shape[0],max_count,replace=False)]
+        for i,rep in enumerate(rep_group):
+            axs[i,j].plot(rep[:,0],rep[:,1])
+    fig.suptitle(plot_label, fontsize=16)
+    fig.tight_layout()
+    fig.show()
+
 
 
 def plot_features_by_time(orig_list, figsize =(10,15)):
