@@ -33,6 +33,20 @@ from keras import layers, losses
 #   def call(self, y_true, y_pred):
 #     return tf.reduce_mean(tf.math.square(y_pred - y_true), axis=-1)
 
+def dense_autoencoder(timesteps = 16, input_dim = 2, latent_dim = 8):
+    x = Input(shape=(timesteps, input_dim), name='input_seq')
+    encoded = Flatten()(x)
+    encoded =  Dense(32, activation="relu",name='dense1')(encoded)
+    encoded = Dense(16, activation="relu",name='dense2')(encoded)
+    latent = Dense(latent_dim, activation="relu",name='latent')(encoded)
+    
+    decoded = Dense(latent_dim, activation="relu",name='dedense1')(latent)
+    decoded = Dense(latent_dim*2, activation="relu",name='dedense2')(decoded)
+    decoded = Dense(latent_dim*4, activation="sigmoid",name='dedense3'),
+    output = Reshape((16, 2) , name='reshape1')
+    model = Model(inputs=x, outputs=encoded, name='encoder')
+
+
 def temporal_classifier(input_dim, num_labels, timesteps, n_filters=[64,64,64], kernel_size=10, strides=1, pool_size=10, n_units=[50, 1]):
   assert(timesteps % pool_size == 0)
 
@@ -103,26 +117,30 @@ def temporal_autoencoder(input_dim, timesteps, n_filters=50, kernel_size=10, str
 
     return autoencoder, encoder, decoder
 
-class Autoencoder(Model):
+
+class Autoencoder_Dense(Model):
   def __init__(self, latent_dim):
-    super(Autoencoder, self).__init__()
+    super(Autoencoder_Dense, self).__init__()
+    self.latent_dim = latent_dim   
+    self.encoder = Sequential([
+      Flatten(),
+      Dense(32, activation="relu",name='dense1'),
+      Dense(16, activation="relu",name='dense2'),
+      Dense(latent_dim, activation="relu",name='dense3')])
 
-    self.latent_dim = latent_dim
-
-    self.encoder = tf.keras.Sequential([
-      layers.Flatten(),
-      layers.Dense(latent_dim, activation='relu'),
-    ])
-
-    self.decoder = tf.keras.Sequential([
-      layers.Dense(784, activation='sigmoid'),
-      layers.Reshape((28, 28))
-    ])
+    self.decoder = Sequential([
+      Dense(6, activation="relu",name='dedense1'),
+      Dense(10, activation="relu",name='dedense2'),
+      Dense(16, activation="sigmoid",name='dedense3'),
+      Reshape((16, 1) , name='reshape1')
+      ])
 
   def call(self, x):
     encoded = self.encoder(x)
     decoded = self.decoder(encoded)
     return decoded
+
+
 
 def ae_conv(input_shape=(4, 4, 4), filters=[32, 64, 8]):
     stride = 2

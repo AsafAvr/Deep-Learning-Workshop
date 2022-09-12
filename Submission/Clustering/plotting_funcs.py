@@ -69,6 +69,17 @@ def plot_representatives(rep_groups):
             axs[i,j].plot(rep[:,0],rep[:,1])
     fig.show()
 
+def plot_representatives_treatment_le(rep_groups, le):
+    l = len(rep_groups[0])
+    L = len(rep_groups)
+    treatments = list(le.classes_)
+    fig, axs = plt.subplots(l,L, figsize=(10,10),sharey=True,sharex=True)
+    fig.tight_layout()
+    for j,reps in enumerate(rep_groups):
+        axs[0,j].set_title(treatments[j])
+        for i,rep in enumerate(reps):
+            axs[i,j].plot(rep[:,0],rep[:,1])
+    fig.show()
 
 
 def plot_features_by_time(orig_list, figsize =(10,15)):
@@ -77,9 +88,11 @@ def plot_features_by_time(orig_list, figsize =(10,15)):
     features = orig_list[0].shape[1]
     fig, axs = plt.subplots(rows,features, figsize=figsize,sharey=True,sharex=True)
     fig.tight_layout()
+    features_names = ['X','Y','Major Axis', 'Minor Axis', 'Area']
     for j in range(features):
+      axs[0,j].set_title(features_names[j])
       for i,_ in enumerate(orig_list):
-          data = np.zeros((timesteps,2))
+          data = np.zeros((timesteps,1))
           data[:,0] = orig_list[i][:,j]
           idx = [i for i in range(len(data))]
           axs[i,j].plot(idx,data)
