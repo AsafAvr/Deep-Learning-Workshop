@@ -33,7 +33,7 @@ from keras import layers, losses
 #   def call(self, y_true, y_pred):
 #     return tf.reduce_mean(tf.math.square(y_pred - y_true), axis=-1)
 
-def temporal_classifier(input_dim, num_labels, timesteps, n_filters=[64,64,64], kernel_size=10, strides=1, pool_size=10, n_units=[50, 1]):
+def temporal_classifier(input_dim, num_labels, timesteps, n_filters=[64,64,64], kernel_size=10, pool_size=10, n_units=[50, 1]):
   assert(timesteps % pool_size == 0)
 
   # Input
@@ -42,34 +42,33 @@ def temporal_classifier(input_dim, num_labels, timesteps, n_filters=[64,64,64], 
   # Encoder
   inpt = x
   for i in n_filters:
-    encoded = Conv1D(i, kernel_size, strides=strides, padding='same', activation='linear')(inpt)
-    inpt = encoded
+    if i != 0:
+      encoded = Conv1D(i, kernel_size, strides=1, padding='same', activation='linear')(inpt)
+      inpt = encoded
   encoded = LeakyReLU()(encoded)
   encoded = MaxPool1D(pool_size)(encoded)
   encoded = Bidirectional(LSTM(n_units[0], return_sequences=True), merge_mode='sum')(encoded)
   encoded = LeakyReLU()(encoded)
   encoded = Bidirectional(LSTM(n_units[1], return_sequences=True), merge_mode='sum')(encoded)
-  #encoded = Conv1D(name='latent')(encoded)
-  #encoded = Conv1D(16, 2, strides=2, padding='same', activation='linear')(encoded)
-  encoded = Flatten(name='latent')(encoded)
+  encoded = Flatten()(encoded)
   output = Dense(num_labels,activation='softmax',name='classes')(encoded)
-
   # clustering model
   model = Model(inputs=x, outputs=output, name='classifier')
 
-  # Encoder model
-  encoder = Model(inputs=x, outputs=encoded, name='encoder')
-
-  return model, encoder
+  return model
 
 
-def temporal_autoencoder(input_dim, timesteps, n_filters=50, kernel_size=10, strides=1, pool_size=10, n_units=[50, 1]):
+def temporal_autoencoder(input_dim, timesteps, n_filters=[64,64,64], kernel_size=10, strides=1, pool_size=10, n_units=[50, 1]):
     assert(timesteps % pool_size == 0)
 
     # Input
     x = Input(shape=(timesteps, input_dim), name='input_seq')
 
-    # Encoder
+    # Encode
+    inpt = x
+    for i in n_filters:
+      encoded = Conv1D(i, kernel_size, strides=strides, padding='same', activation='linear')(inpt)
+      inpt = encoded
     encoded = Conv1D(n_filters, kernel_size, strides=strides, padding='same', activation='linear')(x)
     encoded = LeakyReLU()(encoded)
     encoded = MaxPool1D(pool_size)(encoded)
