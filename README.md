@@ -7,3 +7,4 @@ After extensive research and collaboration with Ilans’ lab we were able to imp
 As we ran an experiment from the lab through our new pipeline, we set out to discover different patterns of  appearance and motion (morpho-kinetic) features using techniques from the deep-learning toolkit.
 This approach, using only the data to guide us, wasn’t successful in providing new insights. Nevertheless, the approach for applying deep learning on similar domains proved to be insightful, and we are hoping that further collaboration with the lab will improve our results.
 
+<a href="DL Workshop Report.pdf" class="image fit"><img src="pdf_prev.png" alt=""></a>
